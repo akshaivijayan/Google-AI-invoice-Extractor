@@ -1,0 +1,7 @@
+{
+  "name": "InvoiceLens AI",
+  "description": "A high-performance invoice extraction tool that converts PDFs, images, and text documents into structured JSON data using Gemini 3 Flash.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
