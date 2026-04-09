@@ -1,0 +1,209 @@
+[
+  {
+    "id": 0,
+    "author": "user",
+    "payload": {
+      "type": "text",
+      "text": "An app to extract contents in the form of json when we upload an invoice as a pdf or text",
+      "files": [],
+      "fileUploads": [],
+      "cMarkNode": {}
+    },
+    "createdTimestamp": {
+      "seconds": 1771399222,
+      "nanos": 778000000
+    }
+  },
+  {
+    "id": 1,
+    "author": "model",
+    "payload": {
+      "type": "thinking",
+      "text": "**Developing Invoice Parser**\n\nI'm working on the React app for invoice content extraction. The focus is on handling PDF, text, and image uploads, although image processing is still under consideration. The initial architecture is taking shape, and I'm planning to use the Gemini API to parse the uploaded content into a JSON structure.\n\n\n**Refining React Structure**\n\nI've been solidifying the React application's structure. I have a clear plan for the components: `FileUpload`, `JsonViewer`, and `StatusBanner`. The file structure is also in place, with a `geminiService` for API integration and a set of `types` and `fileHelpers`. I'm leaning toward using `gemini-3-flash-preview` because of its effectiveness and speed. Finally, I need to define a robust system prompt with a strict JSON schema for invoice data.\n\n\n**Defining Invoice Schema**\n\nI've finalized the invoice data schema using `Type.OBJECT` with specific properties (invoice number, date, vendor, customer, and items). Gemini handles PDFs directly via `inlineData`, streamlining file processing. I'm focusing on text and image handling, ensuring MIME type correctness and base64 conversion respectively. I must remember to include a \"processing\" UI element.\n\nI'm also paying attention to how `GoogleGenAI` initializes with `apiKey`. The design's leaning towards a SaaS dashboard style, with card-based elements, dark mode, and an interactive JSON explorer.\n\n\n",
+      "cMarkNode": {}
+    },
+    "createdTimestamp": {
+      "seconds": 1771399222,
+      "nanos": 778000000
+    },
+    "doneTimestamp": {
+      "seconds": 1771399230,
+      "nanos": 695000000
+    }
+  },
+  {
+    "id": 2,
+    "author": "model",
+    "payload": {
+      "type": "generationTable",
+      "entries": [
+        {
+          "path": "metadata.json",
+          "generationType": 0,
+          "isDone": true,
+          "description": "App metadata including permissions and basic info.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\n{\n  \"name\": \"InvoiceLens AI\",\n  \"description\": \"A high-performance invoice extraction tool that converts PDFs, images, and text documents into structured JSON data using Gemini 3 Flash.\",\n  \"requestFramePermissions\": [\n    \"camera\"\n  ]\n}\n"
+            }
+          ]
+        },
+        {
+          "path": "index.html",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Base HTML file with Tailwind CSS and root element.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\n<!DOCTYPE html>\n<html lang=\"en\" class=\"h-full\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>InvoiceLens AI - Intelligent Extraction</title>\n    <script src=\"https://cdn.tailwindcss.com\"></script>\n    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n    <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap\" rel=\"stylesheet\">\n    <style>\n        body {\n            font-family: 'Inter', sans-serif;\n            background-color: #0a0a0a;\n            color: #f5f5f5;\n        }\n        .mono {\n            font-family: 'JetBrains Mono', monospace;\n        }\n        ::-webkit-scrollbar {\n            width: 8px;\n            height: 8px;\n        }\n        ::-webkit-scrollbar-track {\n            background: #1a1a1a;\n        }\n        ::-webkit-scrollbar-thumb {\n            background: #333;\n            border-radius: 4px;\n        }\n        ::-webkit-scrollbar-thumb:hover {\n            background: #444;\n        }\n    </style>\n</head>\n<body class=\"h-full overflow-x-hidden\">\n    <div id=\"root\" class=\"h-full\"></div>\n</body>\n</html>\n"
+            }
+          ]
+        },
+        {
+          "path": "index.tsx",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Entry point for the React application.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nimport React from 'react';\nimport ReactDOM from 'react-dom/client';\nimport App from './App';\n\nconst rootElement = document.getElementById('root');\nif (!rootElement) {\n  throw new Error(\"Could not find root element to mount to\");\n}\n\nconst root = ReactDOM.createRoot(rootElement);\nroot.render(\n  <React.StrictMode>\n    <App />\n  </React.StrictMode>\n);\n"
+            }
+          ]
+        },
+        {
+          "path": "types.ts",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Global types and interfaces for invoice data.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nexport interface InvoiceItem {\n  description: string;\n  quantity: number;\n  unitPrice: number;\n  total: number;\n}\n\nexport interface InvoiceData {\n  invoiceNumber: string;\n  date: string;\n  dueDate?: string;\n  vendorName: string;\n  vendorAddress: string;\n  vendorPhone?: string;\n  customerName: string;\n  customerAddress?: string;\n  items: InvoiceItem[];\n  subtotal: number;\n  taxAmount: number;\n  totalAmount: number;\n  currency: string;\n  paymentStatus?: string;\n}\n\nexport type ExtractionStatus = 'idle' | 'processing' | 'success' | 'error';\n\nexport interface FileInfo {\n  name: string;\n  size: string;\n  type: string;\n  previewUrl?: string;\n  content?: string; // For text files\n}\n"
+            }
+          ]
+        },
+        {
+          "path": "services/geminiService.ts",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Service layer for interacting with the Gemini API to extract invoice data.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nimport { GoogleGenAI, Type } from \"@google/genai\";\nimport { InvoiceData } from \"../types\";\n\nconst INVOICE_SCHEMA = {\n  type: Type.OBJECT,\n  properties: {\n    invoiceNumber: { type: Type.STRING, description: \"Unique identifier for the invoice\" },\n    date: { type: Type.STRING, description: \"Issue date of the invoice\" },\n    dueDate: { type: Type.STRING, description: \"Due date for payment\" },\n    vendorName: { type: Type.STRING, description: \"Name of the seller or company providing the service\" },\n    vendorAddress: { type: Type.STRING, description: \"Full address of the vendor\" },\n    vendorPhone: { type: Type.STRING, description: \"Contact phone of the vendor\" },\n    customerName: { type: Type.STRING, description: \"Name of the buyer or client\" },\n    customerAddress: { type: Type.STRING, description: \"Address of the customer\" },\n    items: {\n      type: Type.ARRAY,\n      items: {\n        type: Type.OBJECT,\n        properties: {\n          description: { type: Type.STRING },\n          quantity: { type: Type.NUMBER },\n          unitPrice: { type: Type.NUMBER },\n          total: { type: Type.NUMBER },\n        },\n        required: [\"description\", \"total\"],\n      },\n    },\n    subtotal: { type: Type.NUMBER },\n    taxAmount: { type: Type.NUMBER },\n    totalAmount: { type: Type.NUMBER },\n    currency: { type: Type.STRING, description: \"Currency code (e.g., USD, EUR)\" },\n    paymentStatus: { type: Type.STRING, description: \"Current status of payment if indicated\" },\n  },\n  required: [\"invoiceNumber\", \"vendorName\", \"totalAmount\", \"items\"],\n};\n\nexport const extractInvoiceData = async (\n  fileData: string,\n  mimeType: string,\n  isText: boolean = false\n): Promise<InvoiceData> => {\n  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });\n\n  const prompt = `Act as an expert financial data extractor. Analyze the provided ${isText ? 'text' : 'document'} and extract all relevant invoice information accurately. Ensure numeric values are returned as numbers and dates are in a consistent YYYY-MM-DD format if possible.`;\n\n  const config = {\n    responseMimeType: \"application/json\",\n    responseSchema: INVOICE_SCHEMA,\n    temperature: 0.1, // Lower temperature for more consistent extraction\n  };\n\n  const model = \"gemini-3-flash-preview\";\n\n  let response;\n\n  if (isText) {\n    response = await ai.models.generateContent({\n      model,\n      contents: `Context: ${prompt}\\n\\nInvoice Content:\\n${fileData}`,\n      config,\n    });\n  } else {\n    response = await ai.models.generateContent({\n      model,\n      contents: {\n        parts: [\n          { text: prompt },\n          {\n            inlineData: {\n              mimeType,\n              data: fileData,\n            },\n          },\n        ],\n      },\n      config,\n    });\n  }\n\n  const resultText = response.text;\n  if (!resultText) {\n    throw new Error(\"Failed to extract data from the invoice.\");\n  }\n\n  return JSON.parse(resultText) as InvoiceData;\n};\n"
+            }
+          ]
+        },
+        {
+          "path": "components/FileUpload.tsx",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Component for handling file uploads (PDF, Images, Text).",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nimport React, { useRef, useState } from 'react';\nimport { FileInfo } from '../types';\n\ninterface FileUploadProps {\n  onFileSelect: (file: File, fileInfo: FileInfo) => void;\n  isLoading: boolean;\n}\n\nconst FileUpload: React.FC<FileUploadProps> = ({ onFileSelect, isLoading }) => {\n  const [isDragging, setIsDragging] = useState(false);\n  const fileInputRef = useRef<HTMLInputElement>(null);\n\n  const handleDragOver = (e: React.DragEvent) => {\n    e.preventDefault();\n    setIsDragging(true);\n  };\n\n  const handleDragLeave = () => {\n    setIsDragging(false);\n  };\n\n  const formatFileSize = (bytes: number) => {\n    if (bytes === 0) return '0 Bytes';\n    const k = 1024;\n    const sizes = ['Bytes', 'KB', 'MB', 'GB'];\n    const i = Math.floor(Math.log(bytes) / Math.log(k));\n    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];\n  };\n\n  const processFile = async (file: File) => {\n    const fileInfo: FileInfo = {\n      name: file.name,\n      size: formatFileSize(file.size),\n      type: file.type,\n    };\n\n    if (file.type.startsWith('image/')) {\n      fileInfo.previewUrl = URL.createObjectURL(file);\n    } else if (file.type === 'text/plain') {\n      const text = await file.text();\n      fileInfo.content = text;\n    }\n\n    onFileSelect(file, fileInfo);\n  };\n\n  const handleDrop = (e: React.DragEvent) => {\n    e.preventDefault();\n    setIsDragging(false);\n    if (e.dataTransfer.files && e.dataTransfer.files[0]) {\n      processFile(e.dataTransfer.files[0]);\n    }\n  };\n\n  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {\n    if (e.target.files && e.target.files[0]) {\n      processFile(e.target.files[0]);\n    }\n  };\n\n  return (\n    <div\n      onDragOver={handleDragOver}\n      onDragLeave={handleDragLeave}\n      onDrop={handleDrop}\n      onClick={() => !isLoading && fileInputRef.current?.click()}\n      className={`\n        relative border-2 border-dashed rounded-2xl p-8 transition-all duration-300 cursor-pointer\n        flex flex-col items-center justify-center min-h-[250px]\n        ${isDragging ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01]' : 'border-zinc-800 hover:border-zinc-600 bg-zinc-900/50'}\n        ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}\n      `}\n    >\n      <input\n        type=\"file\"\n        ref={fileInputRef}\n        onChange={handleFileInput}\n        className=\"hidden\"\n        accept=\"application/pdf,image/*,text/plain\"\n        disabled={isLoading}\n      />\n      \n      <div className=\"w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-zinc-400 group-hover:text-indigo-400 transition-colors\">\n        <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-8 w-8\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\n          <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12\" />\n        </svg>\n      </div>\n      \n      <h3 className=\"text-xl font-semibold mb-2 text-white\">Upload Invoice</h3>\n      <p className=\"text-zinc-400 text-center max-w-sm\">\n        Drag and drop your PDF, image, or text file here, or click to browse.\n      </p>\n      <p className=\"mt-4 text-xs text-zinc-500\">\n        Supports PDF, JPG, PNG, and TXT (Max 10MB)\n      </p>\n\n      {isLoading && (\n        <div className=\"absolute inset-0 bg-zinc-950/40 rounded-2xl flex flex-col items-center justify-center backdrop-blur-[2px]\">\n          <div className=\"w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4\"></div>\n          <span className=\"text-sm font-medium text-white\">Extracting Data...</span>\n        </div>\n      )}\n    </div>\n  );\n};\n\nexport default FileUpload;\n"
+            }
+          ]
+        },
+        {
+          "path": "components/JsonDisplay.tsx",
+          "generationType": 0,
+          "isDone": true,
+          "description": "A component to display JSON data with syntax highlighting and copy functionality.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nimport React, { useState } from 'react';\n\ninterface JsonDisplayProps {\n  data: any;\n}\n\nconst JsonDisplay: React.FC<JsonDisplayProps> = ({ data }) => {\n  const [copied, setCopied] = useState(false);\n\n  const copyToClipboard = () => {\n    navigator.clipboard.writeText(JSON.stringify(data, null, 2));\n    setCopied(true);\n    setTimeout(() => setCopied(false), 2000);\n  };\n\n  const downloadJson = () => {\n    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });\n    const url = URL.createObjectURL(blob);\n    const a = document.createElement('a');\n    a.href = url;\n    a.download = `invoice-data-${new Date().getTime()}.json`;\n    a.click();\n    URL.revokeObjectURL(url);\n  };\n\n  return (\n    <div className=\"bg-[#0f0f0f] rounded-xl overflow-hidden border border-zinc-800 flex flex-col h-full\">\n      <div className=\"flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800\">\n        <div className=\"flex items-center gap-2\">\n          <div className=\"w-3 h-3 rounded-full bg-red-500/80\"></div>\n          <div className=\"w-3 h-3 rounded-full bg-yellow-500/80\"></div>\n          <div className=\"w-3 h-3 rounded-full bg-green-500/80\"></div>\n          <span className=\"ml-2 text-xs font-medium text-zinc-400 uppercase tracking-wider\">JSON Result</span>\n        </div>\n        <div className=\"flex gap-2\">\n          <button\n            onClick={copyToClipboard}\n            className=\"p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center gap-1 text-xs\"\n            title=\"Copy to clipboard\"\n          >\n            {copied ? (\n              <>\n                <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-3.5 w-3.5 text-green-500\" viewBox=\"0 0 20 20\" fill=\"currentColor\">\n                  <path fillRule=\"evenodd\" d=\"M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z\" clipRule=\"evenodd\" />\n                </svg>\n                <span>Copied</span>\n              </>\n            ) : (\n              <>\n                <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\n                  <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3\" />\n                </svg>\n                <span>Copy</span>\n              </>\n            )}\n          </button>\n          <button\n            onClick={downloadJson}\n            className=\"p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center gap-1 text-xs\"\n            title=\"Download JSON\"\n          >\n            <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-3.5 w-3.5\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\n              <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4\" />\n            </svg>\n            <span>Download</span>\n          </button>\n        </div>\n      </div>\n      <div className=\"flex-grow p-6 overflow-auto mono text-sm leading-relaxed\">\n        <pre className=\"text-indigo-300\">\n          {JSON.stringify(data, null, 2)}\n        </pre>\n      </div>\n    </div>\n  );\n};\n\nexport default JsonDisplay;\n"
+            }
+          ]
+        },
+        {
+          "path": "components/InvoiceSummary.tsx",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Visual summary of the extracted invoice data.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nimport React from 'react';\nimport { InvoiceData } from '../types';\n\ninterface InvoiceSummaryProps {\n  data: InvoiceData;\n}\n\nconst InvoiceSummary: React.FC<InvoiceSummaryProps> = ({ data }) => {\n  return (\n    <div className=\"space-y-6\">\n      <div className=\"grid grid-cols-1 md:grid-cols-2 gap-6\">\n        {/* Basic Info */}\n        <div className=\"bg-zinc-900/50 rounded-xl p-6 border border-zinc-800\">\n          <h4 className=\"text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-4\">Invoice Information</h4>\n          <div className=\"space-y-3\">\n            <div className=\"flex justify-between\">\n              <span className=\"text-zinc-400 text-sm\">Number</span>\n              <span className=\"text-white font-medium\">{data.invoiceNumber}</span>\n            </div>\n            <div className=\"flex justify-between\">\n              <span className=\"text-zinc-400 text-sm\">Date</span>\n              <span className=\"text-white font-medium\">{data.date}</span>\n            </div>\n            {data.dueDate && (\n              <div className=\"flex justify-between\">\n                <span className=\"text-zinc-400 text-sm\">Due Date</span>\n                <span className=\"text-white font-medium\">{data.dueDate}</span>\n              </div>\n            )}\n            <div className=\"flex justify-between\">\n              <span className=\"text-zinc-400 text-sm\">Currency</span>\n              <span className=\"text-white font-medium\">{data.currency}</span>\n            </div>\n          </div>\n        </div>\n\n        {/* Vendor/Customer Info */}\n        <div className=\"bg-zinc-900/50 rounded-xl p-6 border border-zinc-800\">\n          <h4 className=\"text-zinc-500 text-xs font-semibold uppercase tracking-wider mb-4\">Parties</h4>\n          <div className=\"space-y-4\">\n            <div>\n              <span className=\"text-zinc-400 text-xs block mb-1\">Vendor</span>\n              <span className=\"text-white font-semibold block\">{data.vendorName}</span>\n              <span className=\"text-zinc-500 text-xs block truncate\">{data.vendorAddress}</span>\n            </div>\n            <div>\n              <span className=\"text-zinc-400 text-xs block mb-1\">Customer</span>\n              <span className=\"text-white font-semibold block\">{data.customerName}</span>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      {/* Items Table */}\n      <div className=\"bg-zinc-900/50 rounded-xl border border-zinc-800 overflow-hidden\">\n        <table className=\"w-full text-left\">\n          <thead className=\"bg-zinc-800/50\">\n            <tr>\n              <th className=\"px-6 py-3 text-zinc-400 font-medium text-xs uppercase tracking-wider\">Description</th>\n              <th className=\"px-6 py-3 text-zinc-400 font-medium text-xs uppercase tracking-wider text-right\">Qty</th>\n              <th className=\"px-6 py-3 text-zinc-400 font-medium text-xs uppercase tracking-wider text-right\">Price</th>\n              <th className=\"px-6 py-3 text-zinc-400 font-medium text-xs uppercase tracking-wider text-right\">Total</th>\n            </tr>\n          </thead>\n          <tbody className=\"divide-y divide-zinc-800\">\n            {data.items.map((item, idx) => (\n              <tr key={idx} className=\"hover:bg-zinc-800/30 transition-colors\">\n                <td className=\"px-6 py-4 text-sm text-zinc-300\">{item.description}</td>\n                <td className=\"px-6 py-4 text-sm text-zinc-300 text-right\">{item.quantity || 1}</td>\n                <td className=\"px-6 py-4 text-sm text-zinc-300 text-right\">\n                  {data.currency} {item.unitPrice?.toFixed(2) || (item.total / (item.quantity || 1)).toFixed(2)}\n                </td>\n                <td className=\"px-6 py-4 text-sm text-white font-medium text-right\">{data.currency} {item.total.toFixed(2)}</td>\n              </tr>\n            ))}\n          </tbody>\n        </table>\n      </div>\n\n      {/* Totals Section */}\n      <div className=\"flex justify-end\">\n        <div className=\"w-full md:w-64 space-y-2\">\n          <div className=\"flex justify-between text-sm\">\n            <span className=\"text-zinc-400\">Subtotal</span>\n            <span className=\"text-zinc-300\">{data.currency} {data.subtotal.toFixed(2)}</span>\n          </div>\n          <div className=\"flex justify-between text-sm\">\n            <span className=\"text-zinc-400\">Tax</span>\n            <span className=\"text-zinc-300\">{data.currency} {data.taxAmount.toFixed(2)}</span>\n          </div>\n          <div className=\"flex justify-between pt-2 border-t border-zinc-800\">\n            <span className=\"text-zinc-200 font-bold\">Total Amount</span>\n            <span className=\"text-indigo-400 font-bold text-lg\">{data.currency} {data.totalAmount.toFixed(2)}</span>\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n};\n\nexport default InvoiceSummary;\n"
+            }
+          ]
+        },
+        {
+          "path": "App.tsx",
+          "generationType": 0,
+          "isDone": true,
+          "description": "Main application component managing state, layout, and API integration.",
+          "diffs": [
+            {
+              "target": "",
+              "replacement": "\nimport React, { useState, useEffect } from 'react';\nimport { InvoiceData, ExtractionStatus, FileInfo } from './types';\nimport { extractInvoiceData } from './services/geminiService';\nimport FileUpload from './components/FileUpload';\nimport JsonDisplay from './components/JsonDisplay';\nimport InvoiceSummary from './components/InvoiceSummary';\n\nconst App: React.FC = () => {\n  const [status, setStatus] = useState<ExtractionStatus>('idle');\n  const [error, setError] = useState<string | null>(null);\n  const [extractedData, setExtractedData] = useState<InvoiceData | null>(null);\n  const [fileInfo, setFileInfo] = useState<FileInfo | null>(null);\n  const [viewMode, setViewMode] = useState<'visual' | 'json'>('visual');\n\n  const handleFileSelect = async (file: File, info: FileInfo) => {\n    setStatus('processing');\n    setError(null);\n    setFileInfo(info);\n    setExtractedData(null);\n\n    try {\n      let dataToProcess: string;\n      const isText = file.type === 'text/plain';\n\n      if (isText) {\n        dataToProcess = await file.text();\n      } else {\n        // Convert to base64 for Gemini API\n        dataToProcess = await new Promise<string>((resolve, reject) => {\n          const reader = new FileReader();\n          reader.onload = () => {\n            const result = reader.result as string;\n            // Remove the \"data:mime/type;base64,\" prefix\n            resolve(result.split(',')[1]);\n          };\n          reader.onerror = reject;\n          reader.readAsDataURL(file);\n        });\n      }\n\n      const result = await extractInvoiceData(dataToProcess, file.type, isText);\n      setExtractedData(result);\n      setStatus('success');\n    } catch (err: any) {\n      console.error(\"Extraction error:\", err);\n      setError(err.message || \"An unexpected error occurred during extraction.\");\n      setStatus('error');\n    }\n  };\n\n  const resetApp = () => {\n    setStatus('idle');\n    setError(null);\n    setExtractedData(null);\n    setFileInfo(null);\n  };\n\n  return (\n    <div className=\"min-h-screen bg-zinc-950 flex flex-col\">\n      {/* Header */}\n      <header className=\"sticky top-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800\">\n        <div className=\"max-w-7xl mx-auto px-4 h-16 flex items-center justify-between\">\n          <div className=\"flex items-center gap-3\">\n            <div className=\"w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20\">\n              <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-6 w-6 text-white\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\" />\n              </svg>\n            </div>\n            <div>\n              <h1 className=\"text-lg font-bold text-white leading-tight\">InvoiceLens AI</h1>\n              <p className=\"text-xs text-zinc-500 font-medium\">Gemini 3 Powered Extraction</p>\n            </div>\n          </div>\n          \n          {extractedData && (\n            <button \n              onClick={resetApp}\n              className=\"px-4 py-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors\"\n            >\n              Start New Extraction\n            </button>\n          )}\n        </div>\n      </header>\n\n      {/* Main Content */}\n      <main className=\"flex-grow max-w-7xl mx-auto w-full px-4 py-12\">\n        {status === 'idle' || status === 'error' ? (\n          <div className=\"max-w-3xl mx-auto\">\n            <div className=\"text-center mb-12\">\n              <h2 className=\"text-4xl font-extrabold text-white mb-4 tracking-tight\">Turn Invoices into Insights.</h2>\n              <p className=\"text-xl text-zinc-400\">\n                Upload your invoices as PDF, image, or text. Our AI will automatically extract every detail into structured JSON format in seconds.\n              </p>\n            </div>\n\n            {error && (\n              <div className=\"mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-start gap-3\">\n                <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-5 w-5 text-red-500 mt-0.5\" viewBox=\"0 0 20 20\" fill=\"currentColor\">\n                  <path fillRule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z\" clipRule=\"evenodd\" />\n                </svg>\n                <div>\n                  <h3 className=\"text-red-500 font-semibold text-sm\">Extraction Failed</h3>\n                  <p className=\"text-red-400/80 text-sm mt-1\">{error}</p>\n                </div>\n              </div>\n            )}\n\n            <FileUpload onFileSelect={handleFileSelect} isLoading={status === 'processing'} />\n\n            {/* Features Info */}\n            <div className=\"grid grid-cols-1 md:grid-cols-3 gap-6 mt-16\">\n              {[\n                { title: 'Multimodal AI', desc: 'Processes PDF, JPEG, PNG, and plain text documents seamlessly.', icon: '🧠' },\n                { title: 'Smart Extraction', desc: 'Identifies line items, tax, vendor info, and payment terms accurately.', icon: '✨' },\n                { title: 'Developer Ready', desc: 'Get perfectly validated JSON output for your apps and databases.', icon: '🛠️' },\n              ].map((f, i) => (\n                <div key={i} className=\"p-6 rounded-2xl bg-zinc-900/40 border border-zinc-800/50\">\n                  <div className=\"text-3xl mb-4\">{f.icon}</div>\n                  <h3 className=\"text-white font-semibold mb-2\">{f.title}</h3>\n                  <p className=\"text-zinc-500 text-sm leading-relaxed\">{f.desc}</p>\n                </div>\n              ))}\n            </div>\n          </div>\n        ) : (\n          <div className=\"grid grid-cols-1 lg:grid-cols-12 gap-8\">\n            {/* Sidebar / File Info */}\n            <div className=\"lg:col-span-4 space-y-6\">\n              <div className=\"bg-zinc-900 rounded-2xl p-6 border border-zinc-800\">\n                <h3 className=\"text-white font-bold mb-4 flex items-center gap-2\">\n                  <svg xmlns=\"http://www.w3.org/2000/svg\" className=\"h-5 w-5 text-indigo-400\" fill=\"none\" viewBox=\"0 0 24 24\" stroke=\"currentColor\">\n                    <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\" />\n                  </svg>\n                  Document Info\n                </h3>\n                {fileInfo && (\n                  <div className=\"space-y-4\">\n                    <div className=\"flex flex-col gap-1\">\n                      <span className=\"text-zinc-500 text-xs font-semibold uppercase\">Filename</span>\n                      <span className=\"text-zinc-300 font-medium truncate\">{fileInfo.name}</span>\n                    </div>\n                    <div className=\"flex flex-col gap-1\">\n                      <span className=\"text-zinc-500 text-xs font-semibold uppercase\">Size / Type</span>\n                      <span className=\"text-zinc-300 font-medium\">{fileInfo.size} • {fileInfo.type.split('/')[1]?.toUpperCase() || 'TEXT'}</span>\n                    </div>\n                    {fileInfo.previewUrl && (\n                      <div className=\"mt-4 pt-4 border-t border-zinc-800\">\n                        <span className=\"text-zinc-500 text-xs font-semibold uppercase block mb-2\">Preview</span>\n                        <div className=\"rounded-xl overflow-hidden border border-zinc-800 aspect-square\">\n                          <img src={fileInfo.previewUrl} alt=\"Preview\" className=\"w-full h-full object-cover\" />\n                        </div>\n                      </div>\n                    )}\n                  </div>\n                )}\n              </div>\n              \n              <div className=\"bg-gradient-to-br from-indigo-900/20 to-zinc-900 rounded-2xl p-6 border border-indigo-500/20\">\n                <div className=\"flex items-center gap-3 mb-4\">\n                  <div className=\"w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center\">\n                    <span className=\"text-indigo-400 text-lg\">💡</span>\n                  </div>\n                  <h4 className=\"text-white font-semibold\">Pro Tip</h4>\n                </div>\n                <p className=\"text-zinc-400 text-sm leading-relaxed\">\n                  The JSON data is perfectly structured according to standard accounting schemas. You can directly import this into systems like Quickbooks, Xero, or custom databases.\n                </p>\n              </div>\n            </div>\n\n            {/* Results Display */}\n            <div className=\"lg:col-span-8 flex flex-col min-h-[600px]\">\n              <div className=\"flex items-center justify-between mb-4 bg-zinc-900 p-1.5 rounded-xl border border-zinc-800 self-start\">\n                <button\n                  onClick={() => setViewMode('visual')}\n                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'visual' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:text-white'}`}\n                >\n                  Visual Summary\n                </button>\n                <button\n                  onClick={() => setViewMode('json')}\n                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'json' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-zinc-400 hover:text-white'}`}\n                >\n                  Raw JSON\n                </button>\n              </div>\n\n              <div className=\"flex-grow\">\n                {extractedData && (\n                  viewMode === 'visual' ? (\n                    <div className=\"bg-zinc-900 rounded-2xl p-8 border border-zinc-800 animate-in fade-in slide-in-from-bottom-4 duration-500\">\n                      <InvoiceSummary data={extractedData} />\n                    </div>\n                  ) : (\n                    <div className=\"h-full animate-in fade-in slide-in-from-bottom-4 duration-500\">\n                      <JsonDisplay data={extractedData} />\n                    </div>\n                  )\n                )}\n              </div>\n            </div>\n          </div>\n        )}\n      </main>\n\n      {/* Footer */}\n      <footer className=\"border-t border-zinc-900 py-8 bg-zinc-950\">\n        <div className=\"max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4\">\n          <p className=\"text-zinc-500 text-sm\">\n            © 2024 InvoiceLens AI. Built with Google Gemini API.\n          </p>\n          <div className=\"flex gap-6\">\n            <a href=\"#\" className=\"text-zinc-500 hover:text-zinc-300 transition-colors text-sm\">Privacy Policy</a>\n            <a href=\"#\" className=\"text-zinc-500 hover:text-zinc-300 transition-colors text-sm\">API Docs</a>\n            <a href=\"#\" className=\"text-zinc-500 hover:text-zinc-300 transition-colors text-sm\">Status</a>\n          </div>\n        </div>\n      </footer>\n    </div>\n  );\n};\n\nexport default App;\n"
+            }
+          ]
+        }
+      ]
+    },
+    "createdTimestamp": {
+      "seconds": 1771399230,
+      "nanos": 695000000
+    },
+    "doneTimestamp": {
+      "seconds": 1771399231,
+      "nanos": 299000000
+    }
+  },
+  {
+    "id": 3,
+    "author": "user",
+    "payload": {
+      "type": "text",
+      "text": "what is the web app link from github which my friend could check to see the working app",
+      "files": [],
+      "fileUploads": [],
+      "cssBlocks": [],
+      "cMarkNode": {}
+    },
+    "createdTimestamp": {
+      "seconds": 1771401029,
+      "nanos": 802000000
+    }
+  },
+  {
+    "id": 4,
+    "author": "model",
+    "payload": {
+      "type": "thinking",
+      "text": "**Clarifying Application Access**\n\nI'm currently focused on the user's request for a web app link. My core function is code generation and explanation, not web hosting or GitHub deployment. Therefore, I can't directly provide a live URL for the application I'm assisting with. The user must deploy the code themselves to obtain a working web app link.\n\n\n**Addressing Deployment Questions**\n\nI've realized the core issue is the user's question regarding a web app link. The previous response was correct, focusing on code generation, and not deployment, which is the user's need. I'm clarifying that I am an AI and generate code, and I do not provide a GitHub link for a pre-existing app. The response emphasizes the user's need to host the code, highlighting standard frontend deployment tools.\n\n\n",
+      "cMarkNode": {}
+    },
+    "createdTimestamp": {
+      "seconds": 1771401029,
+      "nanos": 802000000
+    },
+    "doneTimestamp": {
+      "seconds": 1771401036,
+      "nanos": 862000000
+    }
+  },
+  {
+    "id": 5,
+    "author": "model",
+    "payload": {
+      "type": "text",
+      "text": "I don't have a specific GitHub link for this application because I am generating the source code directly for you here. To share the working app with your friend, you'll need to host it yourself.\n\nHere is the quickest way to get a link your friend can visit:\n\n1.  **Create a GitHub Repository:** Go to GitHub and create a new repository (e.g., `invoice-lens-ai`).\n2.  **Upload the Code:** Push the `index.html`, `index.tsx`, `App.tsx`, and other files I've provided to that repository.\n3.  **Deploy to Vercel or Netlify:** These platforms are free for small projects. You can simply connect your GitHub repo, and they will give you a live URL (like `invoice-lens-ai.vercel.app`) that you can send to your friend.\n4.  **GitHub Pages:** Alternatively, since this is a frontend-only app, you can enable **GitHub Pages** in your repository settings to host it directly on GitHub.\n\n**Note on the API Key:**\nBecause this app uses the Gemini API, it requires an API key (`process.env.API_KEY`). If you deploy it to a platform like Vercel, you would add your Google AI Studio API key in the \"Environment Variables\" section of the project settings so the app can function correctly for your friend.",
+      "cMarkNode": {}
+    },
+    "createdTimestamp": {
+      "seconds": 1771401036,
+      "nanos": 862000000
+    },
+    "doneTimestamp": {
+      "seconds": 1771401037,
+      "nanos": 46000000
+    }
+  }
+]

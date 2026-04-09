@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 
 interface JsonDisplayProps {
   data: any;
@@ -25,18 +26,24 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ data }) => {
   };
 
   return (
-    <div className="bg-[#0f0f0f] rounded-xl overflow-hidden border border-zinc-800 flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800">
+    <motion.div 
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-zinc-900/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/5 flex flex-col h-full shadow-2xl"
+    >
+      <div className="flex items-center justify-between px-6 py-4 bg-white/5 border-b border-white/5">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-          <span className="ml-2 text-xs font-medium text-zinc-400 uppercase tracking-wider">JSON Result</span>
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500/50 border border-red-500/20"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/50 border border-yellow-500/20"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500/50 border border-green-500/20"></div>
+          </div>
+          <span className="ml-4 text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Structured Data</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={copyToClipboard}
-            className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center gap-1 text-xs"
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest border border-white/5"
             title="Copy to clipboard"
           >
             {copied ? (
@@ -57,7 +64,7 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ data }) => {
           </button>
           <button
             onClick={downloadJson}
-            className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors flex items-center gap-1 text-xs"
+            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest border border-white/5"
             title="Download JSON"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -67,12 +74,12 @@ const JsonDisplay: React.FC<JsonDisplayProps> = ({ data }) => {
           </button>
         </div>
       </div>
-      <div className="flex-grow p-6 overflow-auto mono text-sm leading-relaxed">
-        <pre className="text-indigo-300">
+      <div className="flex-grow p-8 overflow-auto mono text-sm leading-relaxed bg-black/20">
+        <pre className="text-indigo-300/90 selection:bg-indigo-500/30">
           {JSON.stringify(data, null, 2)}
         </pre>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
